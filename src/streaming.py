@@ -1,8 +1,8 @@
 """
 this class encapsulates stream reading functionality
 
-LiveStream is RAII class,
-it's current use case to prevent resource leaks
+LiveStream is RAII class
+
  -----------------------------------
     with LiveStream(url) as stream:
         stream.toJpeg(folderPath)
@@ -10,6 +10,7 @@ it's current use case to prevent resource leaks
 
 """
 
+import platform
 import cv2
 
 
@@ -22,22 +23,18 @@ class LiveStream:
         self.url = url_
 
     def __enter__(self):
-        liveStream = cv2.VideoCapture(self.url)
+        self.stream = cv2.VideoCapture(self.url)
 
-        if liveStream.isOpened() is False:
-            print('!!! Unable to open URL')
+        if not self.stream.isOpened():
             raise Exception("cannot open url:",self.url)
 
-        self.fps = liveStream.get(cv2.CAP_PROP_FPS)
+        self.fps = self.stream.get(cv2.CAP_PROP_FPS)
         self.wait_ms = int(1000 / self.fps)
-        self.stream = liveStream
-
-        print('FPS:', self.fps)
-
         return self
 
     def __exit__(self, type, value, traceback):
         self.stream.release()
+        cv2.destroyAllWindows()
 
     def toJpeg(self, folderPath):
         """
@@ -46,6 +43,8 @@ class LiveStream:
         if not self.stream:
             raise Exception("stream have not been initialised")
 
+        print('[ saving stream as jpeg ... ] ')
+
         for imageIndex in range(self.maxJpegFilesCount):
             imageFileName = folderPath + "/hls_image_{}.jpg".format(imageIndex)
 
@@ -53,12 +52,20 @@ class LiveStream:
 
             cv2.imwrite(imageFileName, frame)
 
+            if platform.system() == 'Windows':
+                cv2.imshow('frame', frame)
+                if cv2.waitKey(self.wait_ms) & 0xFF == ord('q'):
+                    break
+
+
     def toMp4(self, videoFolder):
         """
         converts input stream to mp4 files
         """
         if not self.stream:
             raise Exception("stream have not been initialised")
+
+        print('[ saving stream as video ... ] ')
 
         for videoFileIndex in range(self.maxVideoFilesCount):
             videoFileName = videoFolder + "/hls_video_{}.mp4".format(videoFileIndex)
@@ -74,5 +81,9 @@ class LiveStream:
                 ret, frame = self.stream.read()
                 videoWriter.write(frame)
 
+                if platform.system() == 'Windows':
+                    cv2.imshow('frame', frame)
+                    if cv2.waitKey(self.wait_ms) & 0xFF == ord('q'):
+                        break
+
             videoWriter.release()
-			
