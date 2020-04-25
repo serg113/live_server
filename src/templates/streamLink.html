@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>HLS server - live linking page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Please input stream source link</h1>
+      <br>
+      <form action="" method="post">
+        <input type="text" placeholder="http://0.0.0.0:0000/stream_path" name="link"
+               value="{{ request.form.link }}">
+        <input class="btn btn-default" type="submit" value="Submit" onclick="clearText()">
+      </form>
+      <p id = 'info' class="info">{{ info }} </p>
+    </div>
+  <script>
+    function clearText(){
+      document.getElementById("info").innerHTML = "Processing ...";
+    }
+  </script>
+  </body>
+</html>
